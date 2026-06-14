@@ -83,12 +83,12 @@ def generate_html_report(data_dict, date_str):
             </tr>
         """
         
-    html += \"\"\"
+    html += """
         </table>
         <p style="font-size: 0.9em; color: #666;">This is an automated factual report. Data is sourced from Yahoo Finance.</p>
     </body>
     </html>
-    \"\"\"
+    """
     return html
 
 def send_email(subject, html_content):
