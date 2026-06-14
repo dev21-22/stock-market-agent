@@ -1,5 +1,6 @@
 import os
-import yfinance as yf
+import requests
+from bs4 import BeautifulSoup
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -12,19 +13,24 @@ RECEIVER_EMAIL = os.environ.get("RECEIVER_EMAIL", "dakshp1104@gmail.com")
 SENDER_PASSWORD = os.environ.get("SENDER_PASSWORD") # App Password from environment variable
 
 INDICES = {
-    "NIFTY 50": "^NSEI",
-    "BSE SENSEX": "^BSESN"
+    "NIFTY 50": "NIFTY_50:INDEXNSE",
+    "BSE SENSEX": "SENSEX:INDEXBOM"
 }
 
 def fetch_index_data(ticker_symbol):
     try:
-        ticker = yf.Ticker(ticker_symbol)
-        hist = ticker.history(period="1mo")
-        if hist.empty or len(hist) < 2:
-            return None
+        url = f'https://www.google.com/finance/quote/{ticker_symbol}'
+        res = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'})
+        soup = BeautifulSoup(res.text, 'html.parser')
         
-        latest_close = hist['Close'].iloc[-1]
-        prev_close = hist['Close'].iloc[-2]
+        price_div = soup.find('div', {'class': 'YMlKec fxKbKc'})
+        change_point = soup.find('div', {'class': 'P6K39c'}) # Previous close
+        
+        if not price_div or not change_point:
+            return None
+            
+        latest_close = float(price_div.text.replace(',', ''))
+        prev_close = float(change_point.text.replace(',', ''))
         
         change = latest_close - prev_close
         pct_change = (change / prev_close) * 100
@@ -85,7 +91,7 @@ def generate_html_report(data_dict, date_str):
         
     html += """
         </table>
-        <p style="font-size: 0.9em; color: #666;">This is an automated factual report. Data is sourced from Yahoo Finance.</p>
+        <p style="font-size: 0.9em; color: #666;">This is an automated factual report. Data is sourced from Google Finance.</p>
     </body>
     </html>
     """
