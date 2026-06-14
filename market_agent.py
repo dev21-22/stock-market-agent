@@ -19,7 +19,7 @@ INDICES = {
 def fetch_index_data(ticker_symbol):
     try:
         ticker = yf.Ticker(ticker_symbol)
-        hist = ticker.history(period="5d")
+        hist = ticker.history(period="1mo")
         if hist.empty or len(hist) < 2:
             return None
         
